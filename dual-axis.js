@@ -1,13 +1,30 @@
 var blinkstick  = require('blinkstick');
 var interpolate = require('./interpolate.js');
+var async = require('async');
 
 var led = blinkstick.findFirst();
-led.turnOff();
 
 var blink_val = 100;
-
 var current_value = 0;
 
+//led.turnOff();
+
+var leds = [1];
+
+function init(cb) {
+  async.eachLimit([1, 2, 3, 4, 5, 6, 7, 8], 10, function(index, next) {
+    led.setColor('#000000', {
+      index : index
+    }, function(){
+      next();
+    });
+  }, cb);
+
+}
+
+init()
+//return false;
+// return false;
 //'#0DFF05';
 
 var opts = {
@@ -20,12 +37,24 @@ function getColor() {
 }
 
 function rec() {
-  led.pulse(getColor(), opts, function(){
+  async.eachLimit(leds, 10, function(index, next) {
+    led.pulse(getColor(), {
+      duration : opts.duration,
+      steps : opts.steps,
+      index : index
+    }, function(){
+      next();
+    });
+
+  }, function(err) {
     setTimeout(rec, blink_val * 7.7);
   });
+
 }
 
-rec();
+init(function() {
+  rec();
+});
 
 var stdin = process.stdin;
 stdin.setRawMode(true);
